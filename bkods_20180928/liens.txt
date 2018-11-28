@@ -1,0 +1,14 @@
+Tout savoir sur shiny :
+https://shiny.rstudio.com/
+
+Quelques exemples :
+https://shiny.rstudio.com/gallery/
+
+Deployer:
+https://shiny.rstudio.com/deploy/
+
+Tutos:
+https://shiny.rstudio.com/tutorial/
+
+Get Started!
+https://rstudio.github.io/shinydashboard/get_started.html

@@ -1,0 +1,140 @@
+---
+title: "Plaisir des pieds"
+author: "Maiga Fatim Haby Mariko"
+date: "25 septembre 2018"
+output: html_document
+runtime: shiny
+---
+#{.tabset}
+## Resumé
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+.libPaths('C:/Users/mariko0772/Downloads/Projet Terrain_Fatim/MeetUp')
+```
+
+Pour comprendre la satisfaction de la clientèle, nous allons jetter un coup d'oeil sur les données de deux enquêtes de satisfaction réalisées au cabinet Labbé-David auprès des patients souffrant de pathologie engendrant des douleurs. 
+
+###Quel est le ressenti des patients quant à l'amélioration de leur état de santé ? 
+
+On remarque que la majorité des patients constatent une amélioration. On peut également voir que les patients qui utilisent leurs semelles orthopédiques toute la journée ont les meilleurs résultats. Viennent ensuite les patients qui les utilisent pour le sport. Un test d'indépendance nous permet de confirmer que l'amélioration de l'état du patient est conditionnée à l'utilisation des semelles orthopédiques.
+![](http://www.pedicure-podologue-haute-savoie.com/ressources/common/shutterstock_159783923.jpg)
+
+## Qui sont nos clients ?
+
+Les clients sont dirigés vers le cabinet en majorité par bouche à oreille, par leur médecin ou par leur ostéopathe. Les distributions de 2011 et 2013 sont significativement différentes. 
+
+Quant à la distance domicile-cabinet, on costate une baisse de la clientèle de proximité en faveur de la clientèle éloignée de 2011 à 2013. Cette différence est également significative.
+
+Sur les deux années, la clientèle a été majoritairement féminine avec une surpondération des 31-60 ans. Il n'y a pas d'augmentation significative sur cette tranche d'âge entre 2011 et 2013. On peut également constater une baisse de la patientèle de 15 - 20 ans et une augmentation de celle de 21 - 30  ans.
+
+```{r eruptions, echo=FALSE}
+#importer les  données
+E13 <- read.csv("C:/Users/mariko0772/Downloads/Projet Terrain_Fatim/Projet Terrain_Fatim/Podo/data/Podo_Enquete2013.csv", sep=";")
+E11 <- read.csv("C:/Users/mariko0772/Downloads/Projet Terrain_Fatim/Projet Terrain_Fatim/Podo/data/Podo_Enquete2011.CSV", sep=";")
+
+ech1<-E11
+ech2<-E13
+
+selectInput("var", "Choisissez un critère:", 
+                  choices = c("Sexe", "Age","Distance","Provenance","Impression"))
+
+# shninyServer definie un server logique pour tracer le graphique en barre et faire le test 
+# d'indÃ©pendance entre les annÃ©es en fonction du critÃ¨re choisi
+
+ renderPlot({ 
+   
+  # 1- on met en place une fonction rÃ©active pour passer d'une donnÃ©e Ã  l'autre en fonction du critÃ¨re choisi.
+  # 2- Dans cette fonction on defini chaque critÃ¨re en fonction du tableau croisÃ© des frequences par annÃ©e.
+  # 3- On trace ensuite notre graphique en barre.
+  
+data <- switch(input$var,
+              "Sexe"=rbind(table(ech1$Sexe)/nrow(ech1) ,table(ech2$Sexe)/nrow(ech2)),
+              "Age"=rbind(table(ech1$Age)[c(1,3,4,5,6,7,8,9,2)]/nrow(ech1),table(ech2$Age)[c(1,3,4,5,6,7,8,9,2)]/nrow(ech2)),
+              "Distance"=rbind(table(ech1$Distance)[c(3,1,2,4)]/nrow(ech1),table(ech2$Distance)[c(3,1,2,4)]/nrow(ech2)),
+              "Provenance"=rbind(table(ech1$Connaissance)/nrow(ech1),table(ech2$Connaissance)/nrow(ech2)),
+              "Impression"=rbind(table(ech1$Impression)[c(4,2,1,3)]/nrow(ech1),table(ech2$Impression)[c(4,2,1,3)]/nrow(ech2))
+                     )
+    
+    barplot(data,main=paste('Repartition des patients par',input$var), 
+            ylab='Pourcentage de patients', ylim=c(0.00,0.1+max(data)),beside=T, 
+            legend.text=c('2011', '2013'),col=c('coral1','turquoise3'))
+  })
+  
+
+ # Faire sortir le resultat du test d'indÃ©pendance du Khi-Deux avec la mÃ©thode prÃ©cedemment dÃ©crite.
+  
+renderPrint ({
+    
+    data <- switch(input$var,
+                   "Sexe"=rbind(table(ech1$Sexe),table(ech2$Sexe)),
+                   "Age"=rbind(table(ech1$Age),table(ech2$Age)),
+                   "Distance"=rbind(table(ech1$Distance),table(ech2$Distance)),
+                   "Provenance"=rbind(table(ech1$Connaissance),table(ech2$Connaissance)),
+                   "Impression"=rbind(table(ech1$Impression)[c(4,2,1,3)],table(ech2$Impression)[c(4,2,1,3)])
+                     )
+    
+    chisq.test(data, correct=TRUE)
+  })
+
+```
+
+## Le ressenti des patients 
+
+Pour étudier le ressenti des patients quant à l'amélioration de leur état de santé depuis qu'ils suivent leur traitement, on regarde l'appréciation générale en fonction de la fréquence de port. D'intuition l'amélioration dépend de la fréquence d'utilisation des semelles. Cette intuition est confirmée par un test statistique d'indépendance. 
+
+```{r insert, echo=FALSE}
+#importer les  données
+E13 <- read.csv("C:/Users/mariko0772/Downloads/Projet Terrain_Fatim/Projet Terrain_Fatim/Podo/data/Podo_Enquete2013.csv", sep=";")
+E11 <- read.csv("C:/Users/mariko0772/Downloads/Projet Terrain_Fatim/Projet Terrain_Fatim/Podo/data/Podo_Enquete2011.CSV", sep=";")
+
+ech1=E11[!E11$Impression=='Sans avis' & !E11$Port=='Pas du tout',]
+ech1$Impression=factor(ech1$Impression,ordered=T,levels=c('Pas d\'amélioration','Légère amélioration','Amélioration','Nette amélioration'))
+ech1$Port=factor(ech1$Port)
+
+ech2=E13[!E13$Impression=='Sans avis' & !E13$Port=='Pas du tout',]
+ech2$Impression=factor(ech2$Impression,ordered=T,levels=c('Pas d\'amélioration','Légère amélioration','Amélioration','Nette amélioration'))
+ech2$Port=factor(ech2$Port)
+
+
+  shinyApp(
+
+  ui = fluidPage(
+      fluidRow(style = "padding-bottom: 20px;",   
+               column(4, radioButtons("radio", label = h3("Choisissez une variable"),
+    choices = c("Sexe", "Age","Distance","Provenance","Port"), 
+    selected = "Port")),
+  column(4, radioButtons("but", label = h3("Choisissez une année"),
+    choices = c("2011", "2013"), 
+    selected = "2011"))),
+ fluidRow(
+    plotOutput('plot1',height = "450px")
+  )
+),
+
+  server = function(input, output) {
+
+  output$plot1 =  renderPlot({ 
+   
+  y <- switch(input$but,"2011"=ech1, "2013"=ech2)
+data <- switch(input$radio,
+              "Sexe"=y$Sexe,
+              "Age"=y$Age,
+              "Distance"=y$Distance,
+              "Provenance"=y$Connaissance,
+              "Port"=y$Port
+                     )
+par(las = 2, cex.axis = 1 , mar = c(7, 10, 4, 2.1))
+   spineplot(y$Impression ~ data,col=c('Azure','Azure2','Azure3','Azure4'),xlab='',ylab='')
+   title(main=paste('Le ressenti des patients par ',input$radio,'en ',input$but))
+   title(ylab='Impression',line = 9)
+   title(xlab=input$radio,line = 6)
+  })},
+options = list(width = "100%",height = 730)
+)
+    
+
+```
+
+
+
+
